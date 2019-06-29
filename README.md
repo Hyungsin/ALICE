@@ -1,3 +1,18 @@
+ALICE 
+============================
+ALICE is an autonomous link-based TSCH cell scheduling solution. ALICE uses Contiki Orchestra code as its skeleton code.
+ALICE uses three slotframes (EB, broadcast/default and unicast) as Orchestra does.
+The main difference is unicast slotframe schedule which implements time-varying scheduling and link-based scheduling.
+
+ALICE source code location: ./apps/alice/ and ./core/net/mac/tsch/
+ALICE example code location: ./examples/ipv6/rpl-udp-alice-log/
+
+When using this source code, please cite the following paper: 
+
+Seohyang Kim, Hyung-Sin Kim, and Chongkwon Kim, ALICE: Autonomous Link-based Cell Scheduling for TSCH, In the 18th ACM/IEEE International Conference on Information Processing in Sensor Networks (IPSN'19), April 16-18, 2019, Montreal, Canada.
+
+
+
 The Contiki Operating System
 ============================
 
