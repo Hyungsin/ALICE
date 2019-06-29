@@ -54,16 +54,20 @@
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-adaptive-timesync.h"
+
+#include "net/rpl/rpl.h"//ksh
+#include "net/rpl/rpl-private.h" //ksh
+
 #if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
 #include "lib/simEnvChange.h"
 #include "sys/cooja_mt.h"
 #endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
+//#if TSCH_LOG_LEVEL >= 1
+//#define DEBUG DEBUG_PRINT
+//#else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
+//#endif /* TSCH_LOG_LEVEL */
 #include "net/net-debug.h"
 
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
@@ -381,6 +385,7 @@ update_neighbor_state(struct tsch_neighbor *n, struct tsch_packet *p,
     /* Failed transmission */
     if(p->transmissions >= TSCH_MAC_MAX_FRAME_RETRIES + 1) {
       /* Drop packet */
+	num_pktdrop_mac++;//
       tsch_queue_remove_packet_from_queue(n);
       in_queue = 0;
     }
@@ -681,6 +686,61 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
     tsch_radio_off(TSCH_RADIO_CMD_OFF_END_OF_TIMESLOT);
 
     current_packet->transmissions++;
+
+//----------------------------
+   if(current_link->slotframe_handle == ALICE_UNICAST_SF_ID) {
+
+      int up1_down2=2; //default is downstream
+      rpl_instance_t *instance =rpl_get_default_instance();
+      if(instance==NULL || instance->current_dag==NULL || instance->current_dag->preferred_parent==NULL){
+         //do nothing
+      }else{
+	if(linkaddr_cmp(queuebuf_addr(current_packet->qb, PACKETBUF_ADDR_RECEIVER),rpl_get_parent_lladdr(instance->current_dag->preferred_parent))){
+            up1_down2=1;
+         }else{
+            up1_down2=2;
+         }
+      }
+
+      if(up1_down2==1){ //upstream
+         if(mac_tx_status==MAC_TX_OK){
+            mac_tx_up_ok_counter++;
+         }else{
+            mac_tx_up_error_counter++;
+            if(mac_tx_status==MAC_TX_COLLISION){
+                mac_tx_up_collision_counter++;
+            }else if(mac_tx_status==MAC_TX_NOACK){
+                mac_tx_up_noack_counter++;
+            }else if(mac_tx_status==MAC_TX_DEFERRED){
+                mac_tx_up_deferred_counter++;
+            }else if(mac_tx_status==MAC_TX_ERR){
+                mac_tx_up_err_counter++;
+            }else if(mac_tx_status==MAC_TX_ERR_FATAL){
+                mac_tx_up_err_fatal_counter++;
+            }
+         }
+      }else{ //downstream
+         if(mac_tx_status==MAC_TX_OK){
+            mac_tx_down_ok_counter++;
+         }else{
+            mac_tx_down_error_counter++;
+            if(mac_tx_status==MAC_TX_COLLISION){
+                mac_tx_down_collision_counter++;
+            }else if(mac_tx_status==MAC_TX_NOACK){
+                mac_tx_down_noack_counter++;
+            }else if(mac_tx_status==MAC_TX_DEFERRED){
+                mac_tx_down_deferred_counter++;
+            }else if(mac_tx_status==MAC_TX_ERR){
+                mac_tx_down_err_counter++;
+            }else if(mac_tx_status==MAC_TX_ERR_FATAL){
+                mac_tx_down_err_fatal_counter++;
+            }
+         }
+      }
+   }
+//--------------------------------------------------------
+
+
     current_packet->ret = mac_tx_status;
 
     /* Post TX: Update neighbor state */
@@ -861,24 +921,22 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               ack_len = tsch_packet_create_eack(ack_buf, sizeof(ack_buf),
                   &source_address, frame.seq, (int16_t)RTIMERTICKS_TO_US(estimated_drift), do_nack);
 
-              if(ack_len > 0) {
 #if LLSEC802154_ENABLED
-                if(tsch_is_pan_secured) {
-                  /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
-                  ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &tsch_current_asn);
-                }
+              if(tsch_is_pan_secured) {
+                /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
+                ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &tsch_current_asn);
+              }
 #endif /* LLSEC802154_ENABLED */
 
-                /* Copy to radio buffer */
-                NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
+              /* Copy to radio buffer */
+              NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
 
-                /* Wait for time to ACK and transmit ACK */
-                TSCH_SCHEDULE_AND_YIELD(pt, t, rx_start_time,
-                                        packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
-                TSCH_DEBUG_RX_EVENT();
-                NETSTACK_RADIO.transmit(ack_len);
-                tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
-              }
+              /* Wait for time to ACK and transmit ACK */
+              TSCH_SCHEDULE_AND_YIELD(pt, t, rx_start_time,
+                  packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
+              TSCH_DEBUG_RX_EVENT();
+              NETSTACK_RADIO.transmit(ack_len);
+              tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
             }
 
             /* If the sender is a time source, proceed to clock drift compensation */

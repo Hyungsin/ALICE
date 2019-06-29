@@ -55,18 +55,18 @@
 #include <stdio.h>
 #include <string.h>
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
+//#if TSCH_LOG_LEVEL >= 1
+//#define DEBUG DEBUG_PRINT
+//#else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
+//#endif /* TSCH_LOG_LEVEL */
 #include "net/net-debug.h"
 
 /*---------------------------------------------------------------------------*/
 /* Construct enhanced ACK packet and return ACK length */
 int
 tsch_packet_create_eack(uint8_t *buf, int buf_size,
-                        const linkaddr_t *dest_addr, uint8_t seqno, int16_t drift, int nack)
+                        linkaddr_t *dest_addr, uint8_t seqno, int16_t drift, int nack)
 {
   int ret;
   uint8_t curr_len = 0;

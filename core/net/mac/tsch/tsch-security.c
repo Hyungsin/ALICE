@@ -53,11 +53,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
+//#if TSCH_LOG_LEVEL >= 1
+//#define DEBUG DEBUG_PRINT
+//#else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
+//#endif /* TSCH_LOG_LEVEL */
 #include "net/net-debug.h"
 
 /* The two keys K1 and K2 from 6TiSCH minimal configuration
@@ -125,7 +125,7 @@ tsch_security_check_level(const frame802154_t *frame)
           frame->aux_hdr.key_index == required_key_index);
 }
 /*---------------------------------------------------------------------------*/
-unsigned int
+int
 tsch_security_mic_len(const frame802154_t *frame)
 {
   if(frame != NULL && frame->fcf.security_enabled) {
@@ -135,7 +135,7 @@ tsch_security_mic_len(const frame802154_t *frame)
   }
 }
 /*---------------------------------------------------------------------------*/
-unsigned int
+int
 tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
                            int hdrlen, int datalen, struct tsch_asn_t *asn)
 {
@@ -160,7 +160,7 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
 
   if(!frame.fcf.security_enabled) {
     /* Security is not enabled for this frame, we're done */
-    return 0;
+    return 1;
   }
 
   /* Read security key index */
@@ -198,7 +198,7 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
   return mic_len;
 }
 /*---------------------------------------------------------------------------*/
-unsigned int
+int
 tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
                           const frame802154_t *frame, const linkaddr_t *sender,
                           struct tsch_asn_t *asn)

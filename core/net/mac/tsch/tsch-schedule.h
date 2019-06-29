@@ -125,6 +125,11 @@ struct tsch_slotframe {
 };
 
 /********** Functions *********/
+//ksh. timeslot and channel offset
+struct tsch_link *tsch_schedule_get_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset);
+//ksh. timeslot and channel offset
+int tsch_schedule_remove_link_by_ts_choff(struct tsch_slotframe *slotframe, uint16_t timeslot, uint16_t channel_offset);
+
 
 /* Module initialization, call only once at startup. Returns 1 is success, 0 if failure. */
 int tsch_schedule_init(void);

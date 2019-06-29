@@ -61,11 +61,11 @@
 #error TSCH: FRAME802154_VERSION must be at least FRAME802154_IEEE802154E_2012
 #endif
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
+//#if TSCH_LOG_LEVEL >= 1
+//#define DEBUG DEBUG_PRINT
+//#else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
+//#endif /* TSCH_LOG_LEVEL */
 #include "net/net-debug.h"
 
 /* Use to collect link statistics even on Keep-Alive, even though they were
@@ -119,6 +119,31 @@ const linkaddr_t tsch_eb_address = { { 0, 0, 0, 0, 0, 0, 0, 0 } };
 const linkaddr_t tsch_broadcast_address = { { 0xff, 0xff } };
 const linkaddr_t tsch_eb_address = { { 0, 0 } };
 #endif /* LINKADDR_SIZE == 8 */
+
+//------------//ksh.. tx counter
+int mac_tx_up_ok_counter=0;
+int mac_tx_up_error_counter=0;
+
+int mac_tx_up_collision_counter=0;
+int mac_tx_up_noack_counter=0;
+int mac_tx_up_deferred_counter=0;
+int mac_tx_up_err_counter=0;
+int mac_tx_up_err_fatal_counter=0;
+
+int  tsch_queue_overflow=0;
+
+int mac_tx_down_ok_counter=0;
+int mac_tx_down_error_counter=0;
+
+int mac_tx_down_collision_counter=0;
+int mac_tx_down_noack_counter=0;
+int mac_tx_down_deferred_counter=0;
+int mac_tx_down_err_counter=0;
+int mac_tx_down_err_fatal_counter=0;
+
+uint16_t num_pktdrop_queue=0;
+uint16_t num_pktdrop_mac=0;
+//------------------------------------
 
 /* Is TSCH started? */
 int tsch_is_started = 0;
@@ -451,7 +476,7 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
     return 0;
   }
 #endif /* TSCH_JOIN_SECURED_ONLY */
-  
+
 #if LLSEC802154_ENABLED
   if(!tsch_security_parse_frame(input_eb->payload, hdrlen,
       input_eb->len - hdrlen - tsch_security_mic_len(&frame),
@@ -749,7 +774,7 @@ PROCESS_THREAD(tsch_send_eb_process, ev, data)
 #endif /* LLSEC802154_ENABLED */
         eb_len = tsch_packet_create_eb(packetbuf_dataptr(), PACKETBUF_SIZE,
             &hdr_len, &tsch_sync_ie_offset);
-        if(eb_len > 0) {
+        if(eb_len != 0) {
           struct tsch_packet *p;
           packetbuf_set_datalen(eb_len);
           /* Enqueue EB packet */
@@ -910,15 +935,6 @@ send_packet(mac_callback_t sent, void *ptr)
 
   packet_count_before = tsch_queue_packet_count(addr);
 
-#if !NETSTACK_CONF_BRIDGE_MODE
-  /*
-   * In the Contiki stack, the source address of a frame is set at the RDC
-   * layer. Since TSCH doesn't use any RDC protocol and bypasses the layer to
-   * transmit a frame, it should set the source address by itself.
-   */
-  packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
-#endif
-
   if((hdr_len = NETSTACK_FRAMER.create()) < 0) {
     PRINTF("TSCH:! can't send packet due to framer error\n");
     ret = MAC_TX_ERR;
@@ -998,6 +1014,16 @@ turn_on(void)
     return 1;
   }
   return 0;
+}
+
+/*---------------------------------------------------------------------------*///ksh..
+//returns the current ASFN for ALICE
+uint16_t alice_tsch_schedule_get_current_asfn(struct tsch_slotframe *sf){
+  uint16_t mod = TSCH_ASN_MOD(current_asn, sf->size);
+  struct tsch_asn_t newasn;
+  TSCH_ASN_COPY(newasn, current_asn);
+  TSCH_ASN_DEC(newasn, mod);
+  return TSCH_ASN_DEVISION(newasn, sf->size);
 }
 /*---------------------------------------------------------------------------*/
 static int

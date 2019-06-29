@@ -51,11 +51,11 @@
 #include "net/mac/tsch/tsch-slot-operation.h"
 #include "lib/ringbufindex.h"
 
-#if TSCH_LOG_LEVEL >= 1
-#define DEBUG DEBUG_PRINT
-#else /* TSCH_LOG_LEVEL */
+//#if TSCH_LOG_LEVEL >= 1
+//#define DEBUG DEBUG_PRINT
+//#else /* TSCH_LOG_LEVEL */
 #define DEBUG DEBUG_NONE
-#endif /* TSCH_LOG_LEVEL */
+//#endif /* TSCH_LOG_LEVEL */
 #include "net/net-debug.h"
 
 #if TSCH_LOG_LEVEL >= 2 /* Skip this file for log levels 0 or 1 */
@@ -88,10 +88,16 @@ tsch_log_process_pending(void)
       printf("TSCH: {asn-%x.%lx link-NULL} ", log->asn.ms1b, log->asn.ls4b);
     } else {
       struct tsch_slotframe *sf = tsch_schedule_get_slotframe_by_handle(log->link->slotframe_handle);
-      printf("TSCH: {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
-             log->asn.ms1b, log->asn.ls4b,
+
+      printf("TSCH: {asn-%x.%lx sfNum-%u link-%u-%u-%u-%u ch-%u} ",
+             log->asn.ms1b, log->asn.ls4b, ASN_DEVISION(log->asn, sf->size), //ksh.. sfNum
              log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
              tsch_calculate_channel(&log->asn, log->link->channel_offset));
+
+//      printf("TSCH: {asn-%x.%lx link-%u-%u-%u-%u ch-%u} ",
+//             log->asn.ms1b, log->asn.ls4b,
+//             log->link->slotframe_handle, sf ? sf->size.val : 0, log->link->timeslot, log->link->channel_offset,
+//             tsch_calculate_channel(&log->asn, log->link->channel_offset));
     }
     switch(log->type) {
       case tsch_log_tx:
@@ -110,10 +116,11 @@ tsch_log_process_pending(void)
             log->rx.is_unicast == 0 ? "bc" : "uc", log->rx.is_data, log->rx.sec_level,
                 log->rx.datalen,
                 log->rx.src);
-        if(log->rx.drift_used) {
-          printf(", dr %d", log->rx.drift);
-        }
-        printf(", edr %d\n", (int)log->rx.estimated_drift);
+//        if(log->rx.drift_used) {
+//          printf(", dr %d", log->rx.drift);
+//        }
+//        printf(", edr %d\n", (int)log->rx.estimated_drift);
+        printf("\n ");
         break;
       case tsch_log_message:
         printf("%s\n", log->message);

@@ -22,7 +22,7 @@ The scheduler Orchestra is detailled in [*Orchestra: Robust Mesh Networks Throug
 This implementation includes:
   * Standard IEEE 802.15.4e-2012 frame version 2
   * Standard TSCH joining procedure with Enhanced Beacons with the following Information Elements:
-    * TSCH synchronization (join priority and ASN) 
+    * TSCH synchronization (join priority and ASN)
     * TSCH slotframe and link (basic schedule)
     * TSCH timeslot (timeslot timing template)
     * TSCH channel hopping sequence (hopping sequence template)
@@ -67,7 +67,7 @@ require a RDC (nordc is recommended).
 * `tsch-slot-operation.[ch]`: TSCH low-level slot operation, fully interrupt-driven. Node wake up at every active
 slot (according to the slotframes and links installed), transmit or receive frames and ACKs. Received packets are
 stored in a ringbuf for latter upper-layer processing. Outgoing packets that are dequeued (because acknowledged
-or dropped) are stored in another ringbuf for upper-layer processing. 
+or dropped) are stored in another ringbuf for upper-layer processing.
 * `tsch-asn.h`: TSCH macros for Absolute Slot Number (ASN) handling.
 * `tsch-packet.[ch]`: TSCH Enhanced ACK (EACK) and enhanced Beacon (EB) creation and parsing.
 * `tsch-queue.[ch]`: TSCH  per-neighbor queue, neighbor state, and CSMA-CA.
@@ -185,7 +185,7 @@ TSCH will check when initializing (in `tsch_init`) that the radio driver support
   * disable address filtering with `RADIO_RX_MODE_ADDRESS_FILTER`
   * disable auto-ack with `RADIO_RX_MODE_AUTOACK`
   * enable poll mode with `RADIO_RX_MODE_POLL_MODE`
-* get and set Tx mode (`RADIO_PARAM_TX_MODE`) as follows: 
+* get and set Tx mode (`RADIO_PARAM_TX_MODE`) as follows:
   * disable CCA-before-sending with `RADIO_TX_MODE_SEND_ON_CCA`
 * set radio channel with `RADIO_PARAM_CHANNEL`
 * get last packet timestamp with `RADIO_PARAM_LAST_PACKET_TIMESTAMP`
