@@ -59,6 +59,7 @@
 #include <string.h>
 
 #define DEBUG DEBUG_NONE
+#include "net/net-debug.h"
 #include "net/ip/uip-debug.h"
 
 /* A configurable function called after every RPL parent switch */
@@ -215,13 +216,13 @@ rpl_parent_is_reachable(rpl_parent_t *p) {
   if(p == NULL || p->dag == NULL || p->dag->instance == NULL || p->dag->instance->of == NULL) {
     return 0;
   } else {
-#if UIP_ND6_SEND_NS
+#ifndef UIP_CONF_ND6_SEND_NA
     uip_ds6_nbr_t *nbr = rpl_get_nbr(p);
     /* Exclude links to a neighbor that is not reachable at a NUD level */
     if(nbr == NULL || nbr->state != NBR_REACHABLE) {
       return 0;
     }
-#endif /* UIP_ND6_SEND_NS */
+#endif /* UIP_CONF_ND6_SEND_NA */
     /* If we don't have fresh link information, assume the parent is reachable. */
     return !rpl_parent_is_fresh(p) || p->dag->instance->of->parent_has_usable_link(p);
   }
@@ -246,6 +247,7 @@ rpl_set_preferred_parent(rpl_dag_t *dag, rpl_parent_t *p)
     PRINTF("\n");
 
 #ifdef RPL_CALLBACK_PARENT_SWITCH
+    num_parent_switch++;
     RPL_CALLBACK_PARENT_SWITCH(dag->preferred_parent, p);
 #endif /* RPL_CALLBACK_PARENT_SWITCH */
 
@@ -877,7 +879,7 @@ best_parent(rpl_dag_t *dag, int fresh_only)
       continue;
     }
 
-#if UIP_ND6_SEND_NS
+#ifndef UIP_CONF_ND6_SEND_NA
     {
     uip_ds6_nbr_t *nbr = rpl_get_nbr(p);
     /* Exclude links to a neighbor that is not reachable at a NUD level */
@@ -885,7 +887,7 @@ best_parent(rpl_dag_t *dag, int fresh_only)
       continue;
     }
     }
-#endif /* UIP_ND6_SEND_NS */
+#endif /* UIP_CONF_ND6_SEND_NA */
 
     /* Now we have an acceptable parent, check if it is the new best */
     best = of->best_parent(best, p);
@@ -1545,7 +1547,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   }
 
   /* The DIO comes from a valid DAG, we can refresh its lifetime */
-  dag->lifetime = (1UL << (instance->dio_intmin + instance->dio_intdoubl)) * RPL_DAG_LIFETIME / 1000;
+  dag->lifetime = (1UL << (instance->dio_intmin + instance->dio_intdoubl)) / 1000;
   PRINTF("Set dag ");
   PRINT6ADDR(&dag->dag_id);
   PRINTF(" lifetime to %ld\n", dag->lifetime);

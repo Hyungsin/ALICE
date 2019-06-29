@@ -281,11 +281,11 @@ rpl_ipv6_neighbor_callback(uip_ds6_nbr_t *nbr)
 
   PRINTF("RPL: Neighbor state changed for ");
   PRINT6ADDR(&nbr->ipaddr);
-#if UIP_ND6_SEND_NS || UIP_ND6_SEND_RA
+#if UIP_ND6_SEND_NA || UIP_ND6_SEND_RA
   PRINTF(", nscount=%u, state=%u\n", nbr->nscount, nbr->state);
-#else /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
+#else /* UIP_ND6_SEND_NA || UIP_ND6_SEND_RA */
   PRINTF(", state=%u\n", nbr->state);
-#endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA */
+#endif /* UIP_ND6_SEND_NA || UIP_ND6_SEND_RA */
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES; instance < end; ++instance) {
     if(instance->used == 1 ) {
       p = rpl_find_parent_any_dag(instance, &nbr->ipaddr);
@@ -330,6 +330,14 @@ rpl_purge_dags(void)
 void
 rpl_init(void)
 {
+  /* RPL log metrics */
+  num_dio=0;
+  num_dis=0;
+  num_dao=0;
+  num_dao_ack=0;
+  num_parent_switch=0;
+  num_pktdrop_rpl=0;
+
   uip_ipaddr_t rplmaddr;
   PRINTF("RPL started\n");
   default_instance = NULL;

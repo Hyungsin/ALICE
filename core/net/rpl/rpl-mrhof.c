@@ -78,11 +78,10 @@
  * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5.
  * We use a more aggressive setting: 96, eq ETX of 0.75.
  */
-#define PARENT_SWITCH_THRESHOLD 96 /* Eq ETX of 0.75 */
+#define PARENT_SWITCH_THRESHOLD 96 /* Eq ETX (128) of 0.75 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
 #define MAX_LINK_METRIC     2048 /* Eq ETX of 4 */
-#define PARENT_SWITCH_THRESHOLD 160 /* Eq ETX of 1.25 (results in a churn comparable
-to the threshold of 96 in the non-squared case) */
+#define PARENT_SWITCH_THRESHOLD 160 /* Eq ETX (128) of 1.25 (results in a churn comparable */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
 
 /* Reject parents that have a higher path cost than the following. */
@@ -189,7 +188,7 @@ static int
 parent_has_usable_link(rpl_parent_t *p)
 {
   uint16_t link_metric = parent_link_metric(p);
-  /* Exclude links with too high link metrics  */
+  /* Exclude links with too shigh link metrics  */
   return link_metric <= MAX_LINK_METRIC;
 }
 /*---------------------------------------------------------------------------*/
@@ -213,8 +212,10 @@ best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
   }
 
   dag = p1->dag; /* Both parents are in the same DAG. */
-  p1_cost = parent_path_cost(p1);
-  p2_cost = parent_path_cost(p2);
+
+  //ksh.. original source code compares path_cost rather than directly comparing rank_via_parent.
+  p1_cost = rank_via_parent(p1);//ksh.. parent_path_cost(p1); //rank_via_parent(p1);//ksh..
+  p2_cost = rank_via_parent(p2);//ksh.. parent_path_cost(p2); //rank_via_parent(p2);//ksh..
 
   /* Maintain stability of the preferred parent in case of similar ranks. */
   if(p1 == dag->preferred_parent || p2 == dag->preferred_parent) {
